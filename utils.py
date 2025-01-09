@@ -1,6 +1,7 @@
 import inspect
 import sympy as sp 
 import re
+import streamlit as st
 
 def str_to_lambda(equation, reverse=False):
     """
@@ -20,7 +21,7 @@ def str_to_lambda(equation, reverse=False):
         
         if text.endswith(","):
             text = text[:-1]
-            
+
         return text
     
 
@@ -119,3 +120,14 @@ def extract_coefficients(objective_function, variables):
     coeffs = coefficients.values()
     coeffs = [float(coeff) for coeff in coeffs]
     return coeffs
+
+
+def show_solution(solver, restrictions):
+    """Función para resolver el problema de programación lineal y mostrar resultados."""
+    if not restrictions:
+        st.error("Agrega al menos una restricción para resolver el problema de programación lineal.")
+        return
+
+    
+
+

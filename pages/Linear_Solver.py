@@ -12,6 +12,7 @@ col1, col2 = st.columns([3, 1])  # 3 partes para el contenido principal y 1 part
 
 # Columna principal (col1): Agregar y Mostrar restricciones
 with col1:
+    typeof_optimization = "max"
     if "objective" not in st.session_state:
         st.session_state["objective"] = ""
     
@@ -24,19 +25,20 @@ with col1:
     with type_column:
         st.subheader("")
         typeof_optimization = st.radio("Tipo", ["max", "min"])
+
     
+
+    # Configurar el objetivo si está definido
     if st.session_state["objective"]:
-        st.latex(f"{typeof_optimization}\\quad {st.session_state["objective"]}")
-        solver = LinearProgrammingSolver(minimize=(typeof_optimization == "min"))
-        solver.add_function(st.session_state["objective"])
-        solver.set_objective()
-        print(solver.problem)
+        st.session_state["solver"] = LinearProgrammingSolver(minimize=typeof_optimization == "min")
+        st.session_state["solver"].add_function(st.session_state["objective"])
+        st.session_state["solver"].set_objective()
+        st.latex(f"{typeof_optimization}\\quad {st.session_state['objective']}")
+
 
     # Espacio para almacenar restricciones
     if "restrictions" not in st.session_state:
         st.session_state["restrictions"] = []
-
-    print(st.session_state["restrictions"])
 
     # Mostrar restricciones actuales
     st.subheader("Restricciones Actuales")
@@ -61,32 +63,34 @@ with col1:
     with rhs_col:
         rhs = st.number_input("Lado Derecho", value=0.0)
 
+    solver = st.session_state["solver"]
+    print(solver.problem)
     # Botón para agregar la restricción
     if st.button("Agregar Restricción"):
         if lhs.strip():  # Verifica que el LHS no esté vacío
-            # Agregar la nueva restricción al estado
-            st.session_state["restrictions"].append({
-                "lhs": lhs,
-                "operator": operator,
-                "rhs": rhs
-            })
-            # Mensaje de éxito
-            st.success("Restricción agregada exitosamente.")
-            st.rerun()
+            new_restriction = {"lhs": lhs, "operator": operator, "rhs": float(rhs)}
+            if new_restriction in st.session_state["restrictions"]:
+                st.warning("Esta restricción ya existe.")
+            else:
+                solver.add_constraint(new_restriction["lhs"], new_restriction["operator"], new_restriction["rhs"], f"restriccion_{len(st.session_state['restrictions'])}")
+                st.session_state["restrictions"].append(new_restriction)
+                st.success("Restricción agregada exitosamente.")
+                st.rerun()
+        elif not rhs.strip() or not rhs.replace(".", "", 1).isdigit():
+            st.error("El lado derecho debe ser un número válido.")
         else:
             st.error("El lado izquierdo no puede estar vacío.")
     
     # Botón para resolver el problema de programación lineal
-    if st.button("Resolver Problema de Programación Lineal"):
-        if st.session_state["restrictions"]:
-            # Resolver el problema de programación lineal
-            solver.set_restrictions(st.session_state["restrictions"])
-            solver.solve()
-            # Mostrar la solución
-            st.subheader("Solución")
-            st.latex(solver.get_solution())
-        else:
-            st.error("Agrega al menos una restricción para resolver el problema de programación lineal.")
+    if st.button("Resolver Problema de Programación Lineal") and st.session_state["restrictions"]:
+        # Resolver el problema
+        solver.solve()
+
+        # Mostrar la solución
+        st.subheader("Solución")
+        st.write("Estado:", solver.problem.status)
+        st.write("Valor Óptimo:", solver.problem.objective.value())
+        st.latex(solver.get_solution())
 
 # Columna lateral (col2): Eliminar restricciones
 with col2:
@@ -107,6 +111,11 @@ with col2:
         if st.button("Eliminar"):
             del st.session_state["restrictions"][selected_index]
             st.success("Restricción eliminada.")
+            st.rerun()
+        
+        if st.button("Resetear"):
+            st.session_state["restrictions"] = []
+            st.success("Todas las restricciones han sido eliminadas.")
             st.rerun()
         
     
