@@ -1,7 +1,7 @@
 import streamlit as st
 import sympy as sp
 from models import LinearProgrammingSolver
-
+import utils
 
 
 # Título de la aplicación
@@ -26,12 +26,17 @@ with col1:
         typeof_optimization = st.radio("Tipo", ["max", "min"])
     
     if st.session_state["objective"]:
-            st.latex(f"{typeof_optimization}\\quad {st.session_state["objective"]}")
-    solver = LinearProgrammingSolver(minimize=(typeof_optimization == "min"))
-    
+        st.latex(f"{typeof_optimization}\\quad {st.session_state["objective"]}")
+        solver = LinearProgrammingSolver(minimize=(typeof_optimization == "min"))
+        solver.add_function(st.session_state["objective"])
+        solver.set_objective()
+        print(solver.problem)
+
     # Espacio para almacenar restricciones
     if "restrictions" not in st.session_state:
         st.session_state["restrictions"] = []
+
+    print(st.session_state["restrictions"])
 
     # Mostrar restricciones actuales
     st.subheader("Restricciones Actuales")

@@ -1,18 +1,39 @@
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum
-
+import utils
 class LinearProgrammingSolver:
     def __init__(self, problem_name="LP_Problem", minimize=True):
         self.problem = LpProblem(problem_name, LpMinimize if minimize else -1)
         self.variables = {}
         self.constraints = []
 
-    def add_variable(self, name, low_bound=0, up_bound=None, cat="Continuous"):
-        """Agrega una variable de decisión."""
-        self.variables[name] = LpVariable(name, lowBound=low_bound, upBound=up_bound, cat=cat)
-        return self.variables[name]
+    def add_function(self, objective_function, low_bound=0, up_bound=None, cat="Continuous"):
+        """
+        Agrega variables de decisión basadas en las variables extraídas de una función objetivo.
+        
+        Parámetros:
+        - objective_function: Cadena que representa la función objetivo.
+        - low_bound: Límite inferior para las variables (por defecto 0).
+        - up_bound: Límite superior para las variables (por defecto None).
+        - cat: Tipo de variable (por defecto 'Continuous').
 
-    def set_objective(self, objective_terms):
+        Retorna:
+        - Un diccionario con las variables creadas.
+        """
+        # Extraer variables de la función objetivo
+        self.objective_function = objective_function
+        variables = utils.extract_variables(objective_function)
+        
+        # Crear las variables de decisión
+        for var in variables:
+            var_name = str(var)  # Convertir el identificador simbólico en un nombre
+            self.variables[var_name] = LpVariable(var_name, lowBound=low_bound, upBound=up_bound, cat=cat)
+        
+        return self.variables
+
+    def set_objective(self):
         """Define la función objetivo."""
+        objective_expr = utils.parse_equation(self.objective_function)
+        objective_terms = [objective_expr.subs(var, self.variables[var_name]) for var_name, var in self.variables.items()]
         self.problem += lpSum(objective_terms), "Objective"
 
     def add_constraint(self, constraint, name):
