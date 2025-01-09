@@ -20,8 +20,8 @@ class LinearProgrammingSolver:
         - Un diccionario con las variables creadas.
         """
         # Extraer variables de la función objetivo
-        self.objective_function = objective_function
-        variables = utils.extract_variables(objective_function)
+        self.objective_function = utils.format_to_sympy(objective_function)
+        variables = utils.extract_variables(self.objective_function)
         
         # Crear las variables de decisión
         for var in variables:
@@ -32,13 +32,29 @@ class LinearProgrammingSolver:
 
     def set_objective(self):
         """Define la función objetivo."""
-        objective_expr = utils.parse_equation(self.objective_function)
-        objective_terms = [objective_expr.subs(var, self.variables[var_name]) for var_name, var in self.variables.items()]
+        self.coefficients = utils.extract_coefficients(self.objective_function, self.variables.keys())
+        # Asociar cada coeficiente a su respectiva variable
+        objective_terms = [
+            coeff * self.variables[var_name] 
+            for var_name, coeff in zip(self.variables.keys(), self.coefficients)
+        ]
         self.problem += lpSum(objective_terms), "Objective"
 
-    def add_constraint(self, constraint, name):
+    def add_constraint(self, lhs, operator, rhs, name):
         """Agrega una restricción al problema."""
-        self.problem += constraint, name
+        lhs = utils.format_to_sympy(lhs)
+        variables = utils.extract_variables(lhs)
+        coeffs = utils.extract_coefficients(lhs, variables)
+
+        lhs_rest = sum([self.variables[str(var)] * coeff for var, coeff in zip(variables, coeffs)])
+        rhs_rest = float(rhs)
+
+        if operator == "<=":
+            self.problem += lhs_rest <= rhs_rest, name
+        elif operator == "=":
+            self.problem += lhs_rest == rhs_rest, name
+        elif operator == ">=":
+            self.problem += lhs_rest >= rhs_rest, name
 
     def solve(self):
         """Resuelve el problema y retorna el estado."""

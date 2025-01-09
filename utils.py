@@ -12,8 +12,17 @@ def str_to_lambda(equation, reverse=False):
     Retorna:
     - Una función lambda que representa la restricción.
     """
-    # Crear la expresión de la restricción a partir de la cadena
-    return eval("lambda x, y: " + equation) if not reverse else inspect.getsource(equation).strip().split(":")[-1].strip()
+    if not reverse:
+        # Crear la expresión de la restricción a partir de la cadena
+        return eval("lambda x, y: " + equation)
+    else:
+        text = inspect.getsource(equation).strip().split(":")[-1].strip()
+        
+        if text.endswith(","):
+            text = text[:-1]
+            
+        return text
+    
 
 def parse_equation(equation_str):
     """
@@ -90,3 +99,23 @@ def extract_variables(objective_function):
     variables = expr.free_symbols
 
     return variables
+
+def extract_coefficients(objective_function, variables):
+    """
+    Extrae los coeficientes de las variables en una función objetivo.
+    
+    Parámetros:
+    - objective_function (str): La función objetivo como una cadena.
+    - variables (list): Lista de variables (símbolos de SymPy) en la función objetivo.
+    
+    Retorna:
+    - dict: Diccionario donde las claves son las variables y los valores son sus coeficientes.
+    """
+    # Convertir la función objetivo a una expresión de SymPy
+    expr = sp.sympify(objective_function)
+    
+    # Extraer los coeficientes de cada variable
+    coefficients = {var: expr.coeff(var) for var in variables}
+    coeffs = coefficients.values()
+    coeffs = [float(coeff) for coeff in coeffs]
+    return coeffs
