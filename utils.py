@@ -3,6 +3,7 @@ import sympy as sp
 import re
 import streamlit as st
 
+
 def str_to_lambda(equation, reverse=False):
     """
     Convierte una cadena que describe una restricción en una función lambda.

@@ -20,6 +20,7 @@ class LinearProgrammingSolver:
         - Un diccionario con las variables creadas.
         """
         # Extraer variables de la función objetivo
+        self.objective = objective_function
         self.objective_function = utils.format_to_sympy(objective_function)
         variables = utils.extract_variables(self.objective_function)
         
@@ -41,20 +42,19 @@ class LinearProgrammingSolver:
         self.problem += lpSum(objective_terms), "Objective"
 
     def add_constraint(self, lhs, operator, rhs, name):
-        """Agrega una restricción al problema."""
         lhs = utils.format_to_sympy(lhs)
         variables = utils.extract_variables(lhs)
         coeffs = utils.extract_coefficients(lhs, variables)
 
         lhs_rest = sum([self.variables[str(var)] * coeff for var, coeff in zip(variables, coeffs)])
         rhs_rest = float(rhs)
-
         if operator == "<=":
             self.problem += lhs_rest <= rhs_rest, name
         elif operator == "=":
             self.problem += lhs_rest == rhs_rest, name
         elif operator == ">=":
             self.problem += lhs_rest >= rhs_rest, name
+
 
     def solve(self):
         """Resuelve el problema y retorna el estado."""

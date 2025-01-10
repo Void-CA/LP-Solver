@@ -1,8 +1,12 @@
 import streamlit as st
 import sympy as sp
 from models import LinearProgrammingSolver
-import utils
 
+operator_map = {
+    "≤": "<=",
+    "=": "=",
+    "≥": ">="
+}
 
 # Título de la aplicación
 st.title("Gestión de Restricciones")
@@ -26,13 +30,24 @@ with col1:
         st.subheader("")
         typeof_optimization = st.radio("Tipo", ["max", "min"])
 
-    
+
 
     # Configurar el objetivo si está definido
     if st.session_state["objective"]:
-        st.session_state["solver"] = LinearProgrammingSolver(minimize=typeof_optimization == "min")
-        st.session_state["solver"].add_function(st.session_state["objective"])
-        st.session_state["solver"].set_objective()
+
+        if "solver" not in st.session_state:
+            st.session_state["solver"] = LinearProgrammingSolver(minimize=typeof_optimization == "min")
+            st.session_state["solver"].add_function(st.session_state["objective"])
+            st.session_state["solver"].set_objective()
+
+        objective_has_changed = st.session_state["solver"].objective != st.session_state["objective"]
+
+        if objective_has_changed:
+            print("Cambiando el Solver")
+            st.session_state["solver"] = LinearProgrammingSolver(minimize=typeof_optimization == "min")
+            st.session_state["solver"].add_function(st.session_state["objective"])
+            st.session_state["solver"].set_objective()
+
         st.latex(f"{typeof_optimization}\\quad {st.session_state['objective']}")
 
 
@@ -59,38 +74,38 @@ with col1:
     with lhs_col:
         lhs = st.text_input("Lado Izquierdo", placeholder="Introduce la ecuación (ej. x + 2y)")
     with operator_col:
-        operator = st.selectbox("Operador", ["≤", "=", "≥"])
+        operator_choice = st.selectbox("Operador", ["≤", "=", "≥"])
+        operator = operator_map[operator_choice]
     with rhs_col:
-        rhs = st.number_input("Lado Derecho", value=0.0)
+        rhs = st.number_input("Lado Derecho", value=0)
 
-    solver = st.session_state["solver"]
-    print(solver.problem)
+
     # Botón para agregar la restricción
     if st.button("Agregar Restricción"):
         if lhs.strip():  # Verifica que el LHS no esté vacío
-            new_restriction = {"lhs": lhs, "operator": operator, "rhs": float(rhs)}
+            
+            new_restriction = {"lhs": lhs, "operator": operator, "rhs": rhs}
             if new_restriction in st.session_state["restrictions"]:
                 st.warning("Esta restricción ya existe.")
             else:
-                solver.add_constraint(new_restriction["lhs"], new_restriction["operator"], new_restriction["rhs"], f"restriccion_{len(st.session_state['restrictions'])}")
+                st.session_state["solver"].add_constraint(lhs, operator, str(rhs), f"restriccion_{len(st.session_state['restrictions'])}")
                 st.session_state["restrictions"].append(new_restriction)
                 st.success("Restricción agregada exitosamente.")
-                st.rerun()
-        elif not rhs.strip() or not rhs.replace(".", "", 1).isdigit():
-            st.error("El lado derecho debe ser un número válido.")
+                print(st.session_state["solver"])
+                print(st.session_state["solver"].problem)
         else:
             st.error("El lado izquierdo no puede estar vacío.")
     
     # Botón para resolver el problema de programación lineal
     if st.button("Resolver Problema de Programación Lineal") and st.session_state["restrictions"]:
         # Resolver el problema
-        solver.solve()
+        st.session_state["solver"].solve()
 
         # Mostrar la solución
         st.subheader("Solución")
-        st.write("Estado:", solver.problem.status)
-        st.write("Valor Óptimo:", solver.problem.objective.value())
-        st.latex(solver.get_solution())
+        st.write("Estado:", st.session_state["solver"].problem.status)
+        st.write("Valor Óptimo:", st.session_state["solver"].problem.objective.value())
+        st.latex(st.session_state["solver"].get_solution())
 
 # Columna lateral (col2): Eliminar restricciones
 with col2:
@@ -110,12 +125,13 @@ with col2:
         # Botón para eliminar la restricción seleccionada
         if st.button("Eliminar"):
             del st.session_state["restrictions"][selected_index]
+            del st.session_state["solver"].problem.constraints[f"restriccion_{selected_index}"]
             st.success("Restricción eliminada.")
-            st.rerun()
         
         if st.button("Resetear"):
             st.session_state["restrictions"] = []
+            for constraint_name in list(st.session_state["solver"].problem.constraints.keys()):
+                del st.session_state["solver"].constraints[constraint_name]
             st.success("Todas las restricciones han sido eliminadas.")
-            st.rerun()
         
     
