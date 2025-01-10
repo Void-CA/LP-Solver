@@ -40,7 +40,10 @@ with col1:
             st.session_state["solver"].add_function(st.session_state["objective"])
             st.session_state["solver"].set_objective()
 
-        objective_has_changed = st.session_state["solver"].objective != st.session_state["objective"]
+        objective_has_changed = (
+            st.session_state["solver"].objective != st.session_state["objective"] or 
+            st.session_state["solver"].minimize != (typeof_optimization == "min")
+            )
 
         if objective_has_changed:
             print("Cambiando el Solver")
@@ -59,7 +62,7 @@ with col1:
     st.subheader("Restricciones Actuales")
     if st.session_state["restrictions"]:
         for i, r in enumerate(st.session_state["restrictions"], start=1):
-            latex_equation = f"{i}.\\quad {r['lhs']} {r['operator']} {r['rhs']}"
+            latex_equation = f"{i}.\\quad {r['lhs']} {r['op_choice']} {r['rhs']}"
             st.latex(latex_equation)
     else:
         st.write("No hay restricciones agregadas aún.")
@@ -83,8 +86,7 @@ with col1:
     # Botón para agregar la restricción
     if st.button("Agregar Restricción"):
         if lhs.strip():  # Verifica que el LHS no esté vacío
-            
-            new_restriction = {"lhs": lhs, "operator": operator, "rhs": rhs}
+            new_restriction = {"lhs": lhs, "operator": operator, "rhs": rhs, "op_choice": operator_choice}
             if new_restriction in st.session_state["restrictions"]:
                 st.warning("Esta restricción ya existe.")
             else:

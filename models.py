@@ -3,10 +3,11 @@ import utils
 class LinearProgrammingSolver:
     def __init__(self, problem_name="LP_Problem", minimize=True):
         self.problem = LpProblem(problem_name, LpMinimize if minimize else -1)
+        self.minimize = minimize
         self.variables = {}
         self.constraints = []
 
-    def add_function(self, objective_function, low_bound=0, up_bound=None, cat="Continuous"):
+    def add_function(self, objective_function, low_bound=None, up_bound=None, cat="Continuous"):
         """
         Agrega variables de decisión basadas en las variables extraídas de una función objetivo.
         

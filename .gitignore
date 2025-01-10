@@ -1,0 +1,5 @@
+*.ipynb
+*.sh
+__pycache__/
+test*
+debug*
