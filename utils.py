@@ -198,21 +198,31 @@ def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, x_
     Grafica la región factible y las restricciones para un problema de programación lineal.
     
     Parámetros:
-    - constraints: Lista de funciones de restricciones, cada una en forma de una lambda.
+    - lambda_constraints: Lista de funciones de restricciones, cada una en forma de una lambda.
+    - str_constraints: Lista de restricciones en formato de texto.
     - x_range: Rango para el eje x.
     - y_range: Rango para el eje y.
     - resolution: Resolución de la cuadrícula para calcular la región factible.
+    
+    Retorna:
+    - fig: Objeto Figure de Matplotlib.
     """
+    # Usar estilo de fondo oscuro
+    plt.style.use('dark_background')
+
     # Crear el espacio de valores de x y y
     d = np.linspace(x_range[0], x_range[1], resolution)
     x, y = np.meshgrid(d, d)
+    
+    # Crear figura y ejes
+    fig, ax = plt.subplots()
     
     # Graficar la región factible
     feasible_region = np.ones_like(x, dtype=bool)
     for constraint in lambda_constraints:
         feasible_region &= constraint(x, y)
-        
-    plt.imshow(feasible_region.astype(int), extent=(x.min(), x.max(), y.min(), y.max()), origin="lower", cmap="Greys", alpha=0.2)
+    
+    ax.imshow(feasible_region.astype(int), extent=(x.min(), x.max(), y.min(), y.max()), origin="lower", cmap="inferno", alpha=0.5)
     
     # Graficar las líneas de las restricciones
     for constraint in str_constraints:
@@ -227,7 +237,8 @@ def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, x_
             solution_for_y = sp.solve(eq_y, "y")
             if solution_for_y:  # Si se puede resolver para 'y'
                 y_vals = [solution_for_y[0].subs("x", i) for i in x[0]]
-                plt.plot(x[0], y_vals, label=str(constraint))
+                ax.plot(x[0], y_vals, label=str(constraint))
+                continue
         except Exception as e:
             print(f"No se puede resolver para y: {e}")
         
@@ -237,16 +248,19 @@ def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, x_
             solution_for_x = sp.solve(eq_x, "x")
             if solution_for_x:  # Si se puede resolver para 'x'
                 x_vals = [solution_for_x[0].subs("y", i) for i in y[:, 0]]  # Usamos y[:, 0] para obtener valores de y
-                plt.plot(x_vals, y[:, 0], label=str(constraint))
+                ax.plot(x_vals, y[:, 0], label=str(constraint))
+                continue
         except Exception as e:
             print(f"No se puede resolver para x: {e}")
     
     # Configuración del gráfico
-    plt.xlim(x_range)
-    plt.ylim(y_range)
-    plt.xlabel(r'$x$')
-    plt.ylabel(r'$y$')
-    plt.grid(True)
-    plt.show()
+    ax.set_xlim(x_range)
+    ax.set_ylim(y_range)
+    ax.set_xlabel(r'$x$')
+    ax.set_ylabel(r'$y$')
+    ax.grid(True)
+    ax.legend() 
+    
+    return fig
 
 

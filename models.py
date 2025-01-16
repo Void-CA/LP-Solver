@@ -80,9 +80,9 @@ class LinearProgrammingSolver:
 
         lambda_constraints = [utils.str_to_lambda(str(constraint)) for constraint in constraints]
         str_constraints = [str(constraint) for constraint in constraints]
-        print(lambda_constraints)
-        print(str_constraints)
-        utils.plot_feasible_region_and_constraints(lambda_constraints, str_constraints)
+
+        fig = utils.plot_feasible_region_and_constraints(lambda_constraints, str_constraints)
+        return fig
 
 
 class ResourceAssignmentSolver:

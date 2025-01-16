@@ -4,7 +4,7 @@ from models import LinearProgrammingSolver
 
 operator_map = {
     "≤": "<=",
-    "=": "=",
+    "=": "==",
     "≥": ">="
 }
 
@@ -93,7 +93,7 @@ with col1:
                 st.session_state["solver"].add_constraint(lhs, operator, rhs, f"restriccion_{len(st.session_state["solver"].problem.constraints)}")
                 st.session_state["restrictions"].append(new_restriction)
                 st.success("Restricción agregada exitosamente.")
-                print(st.session_state["solver"].problem)
+                st.rerun()
         else:
             st.error("El lado izquierdo no puede estar vacío.")
     
@@ -109,7 +109,8 @@ with col1:
         st.latex(st.session_state["solver"].get_solution())
 
         # Testing de la region factible
-        st.session_state["solver"].plot_feasible_region(st.session_state["restrictions"])
+        fig = st.session_state["solver"].plot_feasible_region()
+        st.pyplot(fig=fig)
 
 # Columna lateral (col2): Eliminar restricciones
 with col2:
@@ -130,12 +131,13 @@ with col2:
         if st.button("Eliminar"):
             del st.session_state["restrictions"][selected_index]
             del st.session_state["solver"].problem.constraints[f"restriccion_{selected_index}"]
+            st.rerun()
             st.success("Restricción eliminada.")
         
         if st.button("Resetear"):
             st.session_state["restrictions"] = []
             for constraint_name in list(st.session_state["solver"].problem.constraints.keys()):
-                del st.session_state["solver"].constraints[constraint_name]
+                del st.session_state["solver"].problem.constraints[constraint_name]
             st.success("Todas las restricciones han sido eliminadas.")
         
     
