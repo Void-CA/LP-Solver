@@ -1,12 +1,22 @@
 import streamlit as st
-import sympy as sp
 from models import LinearProgrammingSolver
+import time
+import io
 
 operator_map = {
     "≤": "<=",
     "=": "==",
     "≥": ">="
 }
+# Usar CSS para modificar el tamaño del contenedor del gráfico
+st.markdown(
+    """
+    <style>
+        .block-container {
+            max-width: 900px;  # Ajusta el ancho según lo desees
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Título de la aplicación
 st.title("Gestión de Restricciones")
@@ -90,7 +100,7 @@ with col1:
             if new_restriction in st.session_state["restrictions"]:
                 st.warning("Esta restricción ya existe.")
             else:
-                st.session_state["solver"].add_constraint(lhs, operator, rhs, f"restriccion_{len(st.session_state["solver"].problem.constraints)}")
+                st.session_state["solver"].add_constraint(lhs, operator, rhs)
                 st.session_state["restrictions"].append(new_restriction)
                 st.success("Restricción agregada exitosamente.")
                 st.rerun()
@@ -104,16 +114,33 @@ with col1:
 
         # Mostrar la solución
         st.subheader("Solución")
-        st.write("Estado:", st.session_state["solver"].problem.status)
-        st.write("Valor Óptimo:", st.session_state["solver"].problem.objective.value())
-        st.latex(st.session_state["solver"].get_solution())
+        
+        if st.session_state["solver"].problem.status != 1:
+            st.error("El problema no tiene solución óptima.")
+        else:
+            st.success("Problema resuelto exitosamente.")
+        
+            st.latex(r"\text{Valor Óptimo:}" + r"\quad " + str(st.session_state["solver"].problem.objective.value()))
+            solution = st.session_state["solver"].get_solution()
 
+            st.latex(r"\text{Solución:}" + r"\quad " + r",\quad ".join([f"{key} = {value}" for key, value in solution.items()]))
+
+        
         # Testing de la region factible
-        fig = st.session_state["solver"].plot_feasible_region()
-        st.pyplot(fig=fig)
+        try:
+            fig = st.session_state["solver"].plot_feasible_region()
+            st.pyplot(fig=fig)
+        
+        except Exception as e:
+            st.write(f"Nota: {e}")
+
 
 # Columna lateral (col2): Eliminar restricciones
 with col2:
+    # Seccion Expandible para opciones
+    with st.expander("Limites de Restricciones", expanded=False):
+        low_bound = st.number_input("Límite Inferior", value=0)
+        upper_bound = st.number_input("Límite Superior", value=10)
     # Sección Expandible para Eliminar Restricciones
     with st.expander("Eliminar Restricciones", expanded=False):
         if not st.session_state["restrictions"]:
@@ -130,11 +157,12 @@ with col2:
         # Botón para eliminar la restricción seleccionada
         if st.button("Eliminar"):
             del st.session_state["restrictions"][selected_index]
-            del st.session_state["solver"].problem.constraints[f"restriccion_{selected_index}"]
+            st.session_state["solver"].remove_constraint(f"Restriccion_{selected_index}")
             st.rerun()
             st.success("Restricción eliminada.")
         
-        if st.button("Resetear"):
+        # Botón para eliminar todas las restricciones
+        if st.button("Eliminar todas", key="reset_restrictions"):
             st.session_state["restrictions"] = []
             for constraint_name in list(st.session_state["solver"].problem.constraints.keys()):
                 del st.session_state["solver"].problem.constraints[constraint_name]

@@ -193,13 +193,14 @@ def get_range(constraints, variable):
 
 
 
-def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, x_range=(0, 16), y_range=(0, 11), resolution=300):
+def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, optimal_values, x_range=(0, 16), y_range=(0, 11), resolution=300):
     """
     Grafica la región factible y las restricciones para un problema de programación lineal.
     
     Parámetros:
     - lambda_constraints: Lista de funciones de restricciones, cada una en forma de una lambda.
     - str_constraints: Lista de restricciones en formato de texto.
+    - optimal_values: Diccionario con las coordenadas óptimas {"x": x, "y": y}.
     - x_range: Rango para el eje x.
     - y_range: Rango para el eje y.
     - resolution: Resolución de la cuadrícula para calcular la región factible.
@@ -253,13 +254,15 @@ def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, x_
         except Exception as e:
             print(f"No se puede resolver para x: {e}")
     
+    ax.scatter(optimal_values["x"], optimal_values["y"], color="green", s=50, zorder=5, label="Óptimo", alpha=0.8)
+
     # Configuración del gráfico
     ax.set_xlim(x_range)
     ax.set_ylim(y_range)
     ax.set_xlabel(r'$x$')
     ax.set_ylabel(r'$y$')
     ax.grid(True)
-    ax.legend() 
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     
     return fig
 

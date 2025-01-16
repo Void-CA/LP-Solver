@@ -8,6 +8,7 @@ class LinearProgrammingSolver:
         self.minimize = minimize
         self.variables = {}
         self.cons_coeffs = []
+        self.i = 0
 
     def add_function(self, objective_function, low_bound=None, up_bound=None, cat="Continuous"):
         """
@@ -44,11 +45,12 @@ class LinearProgrammingSolver:
         ]
         self.problem += lpSum(objective_terms), "Objective"
 
-    def add_constraint(self, lhs, operator, rhs, name):
+    def add_constraint(self, lhs, operator, rhs):
         lhs = utils.format_to_sympy(lhs)
         variables = utils.extract_variables(lhs)
         coeffs = utils.extract_coefficients(lhs, variables)
-
+        name = f"Restriccion_{self.i}"
+        self.i += 1
         lhs_rest = sum([self.variables[str(var)] * coeff for var, coeff in zip(variables, coeffs)])
         rhs_rest = float(rhs)
         if operator == "<=":
@@ -58,6 +60,15 @@ class LinearProgrammingSolver:
         elif operator == ">=":
             self.problem += lhs_rest >= rhs_rest, name
 
+    def remove_constraint(self, constraint_name):
+        """Elimina una restricción del problema."""
+        del self.problem.constraints[constraint_name]
+
+        # Renombrar las restricciones restantes
+        for idx, (name, constraint) in enumerate(self.problem.constraints.items()):
+            new_name = f"Restriccion_{idx+1}"
+            self.problem.constraints[name].name = new_name
+            self.i = idx + 1
 
     def solve(self):
         """Resuelve el problema y retorna el estado."""
@@ -80,8 +91,10 @@ class LinearProgrammingSolver:
 
         lambda_constraints = [utils.str_to_lambda(str(constraint)) for constraint in constraints]
         str_constraints = [str(constraint) for constraint in constraints]
-
-        fig = utils.plot_feasible_region_and_constraints(lambda_constraints, str_constraints)
+        optimal_values = self.get_solution()
+        if len(optimal_values.values()) > 2:
+            raise ValueError("No se puede graficar un problema con más de dos variables.")
+        fig = utils.plot_feasible_region_and_constraints(lambda_constraints, str_constraints, optimal_values)
         return fig
 
 

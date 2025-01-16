@@ -1,19 +1,14 @@
 import streamlit as st
 
-# Opciones que se mostrarán en LaTeX
-latex_options = [
-    r"$Opción\ 1$", 
-    r"$Opción\ 2$", 
-    r"$Opción\ 3$"
-]
+# Página de inicio
+def main():
+    st.title("Bienvenido al Solver de Programación Lineal")
+    st.write("""
+    Resuelve fácilmente problemas de programación lineal utilizando nuestra herramienta interactiva.
+    Escoge el tipo de solver desde la barra lateral.
+    """)
 
-# Mostrar las opciones en formato LaTeX con st.markdown()
-for option in latex_options:
-    st.markdown(f"Selecciona: {option}")
+    st.image("images/xd.png", caption="Resolver problemas de programación lineal fácilmente.")
 
-# Crear el selector múltiple tradicional
-options = ['Opción 1', 'Opción 2', 'Opción 3']
-selected_options = st.multiselect("Selecciona una opción", options)
-
-# Mostrar las opciones seleccionadas
-st.write(f"Opciones seleccionadas: {selected_options}")
+if __name__ == "__main__":
+    main()
