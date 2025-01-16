@@ -86,14 +86,13 @@ with col1:
     # Botón para agregar la restricción
     if st.button("Agregar Restricción"):
         if lhs.strip():  # Verifica que el LHS no esté vacío
-            new_restriction = {"lhs": lhs, "operator": operator, "rhs": rhs, "op_choice": operator_choice}
+            new_restriction = {"lhs": lhs, "operator": operator, "rhs": str(rhs), "op_choice": operator_choice}
             if new_restriction in st.session_state["restrictions"]:
                 st.warning("Esta restricción ya existe.")
             else:
-                st.session_state["solver"].add_constraint(lhs, operator, str(rhs), f"restriccion_{len(st.session_state['restrictions'])}")
+                st.session_state["solver"].add_constraint(lhs, operator, rhs, f"restriccion_{len(st.session_state["solver"].problem.constraints)}")
                 st.session_state["restrictions"].append(new_restriction)
                 st.success("Restricción agregada exitosamente.")
-                print(st.session_state["solver"])
                 print(st.session_state["solver"].problem)
         else:
             st.error("El lado izquierdo no puede estar vacío.")
@@ -108,6 +107,9 @@ with col1:
         st.write("Estado:", st.session_state["solver"].problem.status)
         st.write("Valor Óptimo:", st.session_state["solver"].problem.objective.value())
         st.latex(st.session_state["solver"].get_solution())
+
+        # Testing de la region factible
+        st.session_state["solver"].plot_feasible_region(st.session_state["restrictions"])
 
 # Columna lateral (col2): Eliminar restricciones
 with col2:

@@ -1,11 +1,13 @@
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum
+import numpy as np
+import matplotlib.pyplot as plt
 import utils
 class LinearProgrammingSolver:
     def __init__(self, problem_name="LP_Problem", minimize=True):
         self.problem = LpProblem(problem_name, LpMinimize if minimize else -1)
         self.minimize = minimize
         self.variables = {}
-        self.constraints = []
+        self.cons_coeffs = []
 
     def add_function(self, objective_function, low_bound=None, up_bound=None, cat="Continuous"):
         """
@@ -34,11 +36,11 @@ class LinearProgrammingSolver:
 
     def set_objective(self):
         """Define la función objetivo."""
-        self.coefficients = utils.extract_coefficients(self.objective_function, self.variables.keys())
+        self.of_coefficients = utils.extract_coefficients(self.objective_function, self.variables.keys())
         # Asociar cada coeficiente a su respectiva variable
         objective_terms = [
             coeff * self.variables[var_name] 
-            for var_name, coeff in zip(self.variables.keys(), self.coefficients)
+            for var_name, coeff in zip(self.variables.keys(), self.of_coefficients)
         ]
         self.problem += lpSum(objective_terms), "Objective"
 
@@ -66,6 +68,22 @@ class LinearProgrammingSolver:
         """Retorna los valores de las variables de decisión."""
         return {name: var.varValue for name, var in self.variables.items()}
     
+    def plot_feasible_region(self, resolution=300):
+        """
+        Grafica la región factible y las restricciones para un problema de programación lineal.
+        
+        Parámetros:
+        - constraints: Lista de restricciones, cada una en forma de .
+        - resolution: Resolución de la cuadrícula para calcular la región factible.
+        """
+        constraints = list(self.problem.constraints.values())
+
+        lambda_constraints = [utils.str_to_lambda(str(constraint)) for constraint in constraints]
+        str_constraints = [str(constraint) for constraint in constraints]
+        print(lambda_constraints)
+        print(str_constraints)
+        utils.plot_feasible_region_and_constraints(lambda_constraints, str_constraints)
+
 
 class ResourceAssignmentSolver:
     def __init__(self, cost_matrix, max_resources_per_task=1, max_tasks_per_resource=1, allow_unassigned_tasks=False, variable_type="Binary"):
@@ -118,5 +136,4 @@ class ResourceAssignmentSolver:
     def get_solution(self):
         return {(i, j): self.x[i][j].varValue for i in range(self.num_resources) for j in range(self.num_tasks) if self.x[i][j].varValue > 0}
 
-
-        
+ 
