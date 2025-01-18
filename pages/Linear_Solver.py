@@ -19,7 +19,7 @@ st.markdown(
     """, unsafe_allow_html=True)
 
 # Título de la aplicación
-st.title("Gestión de Restricciones")
+st.title("Solver de restricciones lineales")
 
 # Crear 2 columnas: una para la parte principal y otra para el panel lateral (eliminar restricciones)
 col1, col2 = st.columns([3, 1])  # 3 partes para el contenido principal y 1 parte para el panel lateral
@@ -167,5 +167,6 @@ with col2:
             for constraint_name in list(st.session_state["solver"].problem.constraints.keys()):
                 del st.session_state["solver"].problem.constraints[constraint_name]
             st.success("Todas las restricciones han sido eliminadas.")
+            st.rerun()
         
     

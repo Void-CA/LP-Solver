@@ -13,6 +13,11 @@ st.markdown(
     </style>
     """, unsafe_allow_html=True)
 
+variable_type = "Binaria"
+max_resources_per_task = 1
+max_tasks_per_resource = 1
+allow_unassigned_tasks = False
+
 def app():
 
     st.title("Solver de Asignación de Recursos")
@@ -29,14 +34,14 @@ def app():
         with dimensions_cols[1]:
             num_workers = st.number_input("Cantidad de trabajadores", min_value=1, step=1, value=3)
 
-        with st.expander("Opciones avanzadas"):
+        with st.expander("**Opciones avanzadas**"):
             col_options = st.columns(3)
             with col_options[0]:
                 max_resources_per_task = st.number_input("Máximo de recursos por tarea", min_value=1, step=1, value=1)
             with col_options[1]:
                 max_tasks_per_resource = st.number_input("Máximo de tareas por recurso", min_value=1, step=1, value=1)
             with col_options[2]:
-                variable_type = st.selectbox("Tipo de variable", ["Binaria", "Continua"], index=0)
+                variable_type = st.selectbox("Tipo de variable", ["Binaria", "Continua", "Entera"], index=0)
 
             allow_unassigned_tasks = st.checkbox("Permitir tareas no asignadas", value=False)
 
@@ -71,6 +76,18 @@ def app():
                 st.dataframe(updated_matrix)
 
     elif input_option == "Cargar desde CSV":
+
+        with st.expander("**Opciones avanzadas**"):
+            col_options = st.columns(3)
+            with col_options[0]:
+                max_resources_per_task = st.number_input("Máximo de recursos por tarea", min_value=1, step=1, value=1)
+            with col_options[1]:
+                max_tasks_per_resource = st.number_input("Máximo de tareas por recurso", min_value=1, step=1, value=1)
+            with col_options[2]:
+                variable_type = st.selectbox("Tipo de variable", ["Binaria", "Continua", "Entera"], index=0)
+
+            allow_unassigned_tasks = st.checkbox("Permitir tareas no asignadas", value=False)
+        
         # Upload CSV file
         st.subheader("Sube un archivo CSV")
         uploaded_file = st.file_uploader("Selecciona un archivo CSV", type=["csv"])
