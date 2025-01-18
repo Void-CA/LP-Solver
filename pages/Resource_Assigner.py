@@ -3,12 +3,12 @@ import pandas as pd
 from models import ResourceAssignmentSolver
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Usar CSS para modificar el tamaño del contenedor del gráfico
+# Use CSS to modify the container size
 st.markdown(
     """
     <style>
         .block-container {
-            max-width: 900px;  # Ajusta el ancho según lo desees
+            max-width: 1000px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -17,53 +17,69 @@ def app():
 
     st.title("Solver de Asignación de Recursos")
 
-    # Opción: Imputar datos o cargar CSV
-    opcion = st.radio("Selecciona cómo ingresar los datos:", ("Imputar manualmente", "Cargar desde CSV"), horizontal=True)
+    # Option: Input data manually or load from CSV
+    input_option = st.radio("Selecciona cómo ingresar los datos:", ("Imputar manualmente", "Cargar desde CSV"), horizontal=True)
 
-    if opcion == "Imputar manualmente":
-        # Pedir dimensiones de la tabla
-        num_recursos = st.number_input("Cantidad de recursos", min_value=1, step=1, value=3)
-        num_trabajadores = st.number_input("Cantidad de trabajadores", min_value=1, step=1, value=3)
+    if input_option == "Imputar manualmente":
 
-        # Crear DataFrame inicial vacío
-        if num_recursos > 0 and num_trabajadores > 0:
-            matriz = pd.DataFrame(
-                [[0 for _ in range(int(num_trabajadores))] for _ in range(int(num_recursos))],
-                columns=[f"Trabajador {i+1}" for i in range(int(num_trabajadores))],
-                index=[f"Recurso {i+1}" for i in range(int(num_recursos))]
+        # Request table dimensions
+        dimensions_cols = st.columns(2)
+        with dimensions_cols[0]:
+            num_resources = st.number_input("Cantidad de recursos", min_value=1, step=1, value=3)
+        with dimensions_cols[1]:
+            num_workers = st.number_input("Cantidad de trabajadores", min_value=1, step=1, value=3)
+
+        with st.expander("Opciones avanzadas"):
+            col_options = st.columns(3)
+            with col_options[0]:
+                max_resources_per_task = st.number_input("Máximo de recursos por tarea", min_value=1, step=1, value=1)
+            with col_options[1]:
+                max_tasks_per_resource = st.number_input("Máximo de tareas por recurso", min_value=1, step=1, value=1)
+            with col_options[2]:
+                variable_type = st.selectbox("Tipo de variable", ["Binaria", "Continua"], index=0)
+
+            allow_unassigned_tasks = st.checkbox("Permitir tareas no asignadas", value=False)
+
+
+        # Create an initial empty DataFrame
+        if num_resources > 0 and num_workers > 0:
+            matrix = pd.DataFrame(
+                [[0 for _ in range(int(num_workers))] for _ in range(int(num_resources))],
+                columns=[f"Trabajador {i+1}" for i in range(int(num_workers))],
+                index=[f"Recurso {i+1}" for i in range(int(num_resources))]
             )
-            matriz.insert(0, "Recurso", matriz.index)  # Agregar índice como columna
+            matrix.insert(0, "Recurso", matrix.index)  # Add index as a column
 
-            # Configurar tabla editable con AgGrid
+            # Configure editable table with AgGrid
             st.subheader("Editar datos manualmente")
-            gb = GridOptionsBuilder.from_dataframe(matriz)
+            gb = GridOptionsBuilder.from_dataframe(matrix)
             gb.configure_default_column(editable=True)
-            gb.configure_column("Recurso", editable=False)  # Hacer el índice no editable
+            gb.configure_column("Recurso", editable=False)  # Make index non-editable
             grid_options = gb.build()
 
             response = AgGrid(
-                matriz,
+                matrix,
                 gridOptions=grid_options,
                 editable=True,
                 fit_columns_on_grid_load=True,
             )
 
-            # Recuperar datos ingresados
+            # Retrieve entered data
             if st.button("Procesar datos manuales"):
-                matriz_actualizada = pd.DataFrame(response["data"])
+                updated_matrix = pd.DataFrame(response["data"])
                 st.write("Datos ingresados:")
-                st.dataframe(matriz_actualizada)
+                st.dataframe(updated_matrix)
 
-    elif opcion == "Cargar desde CSV":
-        # Subir archivo CSV
+    elif input_option == "Cargar desde CSV":
+        # Upload CSV file
         st.subheader("Sube un archivo CSV")
         uploaded_file = st.file_uploader("Selecciona un archivo CSV", type=["csv"])
 
         if uploaded_file is not None:
-            # Leer archivo CSV
+            # Read CSV file
             data = pd.read_csv(uploaded_file)
             
-            # Mostrar y editar los datos del CSV
+            # Display and edit CSV data
             st.subheader("Editar datos del CSV")
             gb = GridOptionsBuilder.from_dataframe(data)
             gb.configure_default_column(editable=True)
@@ -74,25 +90,26 @@ def app():
                 gridOptions=grid_options,
                 editable=True,
                 fit_columns_on_grid_load=True,
+                height=200,
             )
 
-            # Recuperar datos editados
+            # Retrieve edited data
             if st.button("Procesar datos del CSV"):
-                data_editada = pd.DataFrame(response["data"])
+                edited_data = pd.DataFrame(response["data"])
                 st.write("Datos editados:")
-                st.dataframe(data_editada)
+                st.dataframe(edited_data)
 
-    # Opción para guardar los datos procesados
+    # Option to save processed data
     if st.button("Descargar datos procesados"):
-        if opcion == "Imputar manualmente" and 'response' in locals():
-            datos_a_descargar = pd.DataFrame(response["data"])
-        elif opcion == "Cargar desde CSV" and 'response' in locals():
-            datos_a_descargar = pd.DataFrame(response["data"])
+        if input_option == "Imputar manualmente" and 'response' in locals():
+            data_to_download = pd.DataFrame(response["data"])
+        elif input_option == "Cargar desde CSV" and 'response' in locals():
+            data_to_download = pd.DataFrame(response["data"])
         else:
-            datos_a_descargar = None
+            data_to_download = None
 
-        if datos_a_descargar is not None:
-            csv = datos_a_descargar.to_csv(index=False).encode("utf-8")
+        if data_to_download is not None:
+            csv = data_to_download.to_csv(index=False).encode("utf-8")
             st.download_button(
                 label="Descargar CSV",
                 data=csv,

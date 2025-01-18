@@ -13,7 +13,7 @@ st.markdown(
     """
     <style>
         .block-container {
-            max-width: 900px;  # Ajusta el ancho según lo desees
+            max-width: 1000px;  # Ajusta el ancho según lo desees
         }
     </style>
     """, unsafe_allow_html=True)
