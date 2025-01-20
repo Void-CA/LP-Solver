@@ -7,12 +7,16 @@ def main():
     Resuelve fácilmente problemas de programación lineal utilizando nuestra herramienta interactiva.
     Escoge el tipo de solver desde la barra lateral.
     """)
-
+    
     st.subheader("Solver de Problemas Lineales")
     st.write("Este módulo permite resolver problemas de optimización lineal en los que se busca maximizar o minimizar una función objetivo sujeta a un conjunto de restricciones lineales. Es ideal para problemas de planificación, producción, y asignación de recursos. Incluye una interfaz interactiva para ingresar las variables, restricciones, y parámetros, generando soluciones óptimas con pasos detallados.")
+    with st.columns(3)[1]:
+        st.image("images/linear_constraints.png", width=300)
 
     st.subheader("Solver de Asignación de Recursos")
     st.write("Este módulo permite resolver problemas de asignación de recursos en los que se busca asignar tareas a trabajadores de manera óptima. Es ideal para problemas de programación de la producción, asignación de personal, y logística. Incluye una interfaz interactiva para ingresar los datos, generando soluciones óptimas con pasos detallados.")
+    with st.columns(3)[1]:
+        st.image("images/resource_assignment.png", width=300)
 
     st.subheader("Solver de Grafos")
     st.write("""
@@ -21,6 +25,8 @@ def main():
             Es ideal para casos como asignación de personal, planificación de proyectos o distribución de presupuestos.
             Ofrece herramientas para personalizar los criterios de optimización y restricciones específicas.
              """)
+    with st.columns(3)[1]:
+        st.image("images/graphs.png", width=300 )
 
     st.subheader("Solver de CPM")
     st.write("""
@@ -30,7 +36,8 @@ def main():
             del proyecto con pasos detallados.
             """)
     
-    st.image("images/xd.png", caption="Resolver problemas de programación lineal fácilmente.")
+    with st.columns(3)[1]:
+        st.image("images/cpm.png", width=300)
 
 if __name__ == "__main__":
     main()
