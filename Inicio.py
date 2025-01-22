@@ -2,7 +2,7 @@ import streamlit as st
 
 # Página de inicio
 def main():
-    st.title("Bienvenido al Solver de Programación Lineal")
+    st.title("Solver de Programación Lineal")
     st.write("""
     Resuelve fácilmente problemas de programación lineal utilizando nuestra herramienta interactiva.
     Escoge el tipo de solver desde la barra lateral.

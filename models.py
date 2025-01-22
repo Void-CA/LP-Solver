@@ -1,6 +1,4 @@
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum
-import numpy as np
-import matplotlib.pyplot as plt
 import utils
 class LinearProgrammingSolver:
     def __init__(self, problem_name="LP_Problem", minimize=True):

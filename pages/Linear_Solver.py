@@ -1,7 +1,5 @@
 import streamlit as st
 from models import LinearProgrammingSolver
-import time
-import io
 
 operator_map = {
     "≤": "<=",

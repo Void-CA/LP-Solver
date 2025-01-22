@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+matplotlib
+seaborn
+inspect
+sympy
+pulp
+re
+st_aggrid
