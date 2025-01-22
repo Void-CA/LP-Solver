@@ -21,7 +21,7 @@ allow_unassigned_tasks = False
 def app():
 
     st.title("Solver de Asignación de Recursos")
-
+    st.warning("Este módulo está en desarrollo y puede no funcionar correctamente.")
     # Option: Input data manually or load from CSV
     input_option = st.radio("Selecciona cómo ingresar los datos:", ("Imputar manualmente", "Cargar desde CSV"), horizontal=True)
 

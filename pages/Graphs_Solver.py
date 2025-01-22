@@ -2,12 +2,13 @@ import streamlit as st
 import networkx as nx
 from pyvis.network import Network
 
+
 # Inicializar grafo y estado
 if "graph" not in st.session_state:
     st.session_state["graph"] = nx.Graph()
 
 st.title("Graph Drawing Interface")
-
+st.warning("Este módulo está en desarrollo y puede no funcionar correctamente.")
 columns = st.columns(3)
 
 with columns[0]:
