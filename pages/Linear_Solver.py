@@ -1,26 +1,6 @@
 import streamlit as st
 from models import LinearProgrammingSolver
-
-# Mapeo de operadores
-OPERATOR_MAP = {
-    "≤": "<=",
-    "=": "==",
-    "≥": ">="
-}
-
-def configure_page():
-    """Configura el diseño general de la página."""
-    st.markdown(
-        """
-        <style>
-            .block-container {
-                max-width: 1000px;  /* Ajusta el ancho según lo desees */
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
+from utils import OPERATOR_MAP, configure_page
 
 def initialize_session_state():
     """Inicializa las variables de estado necesarias en la sesión."""
@@ -63,6 +43,9 @@ def display_restrictions():
     else:
         st.write("No hay restricciones agregadas aún.")
 
+    
+
+def add_restrictions():
     st.subheader("Agregar Nueva Restricción")
 
     cols = st.columns([3, 1, 1, 2])
@@ -88,12 +71,17 @@ def display_restrictions():
                 if new_restriction in st.session_state["restrictions"]:
                     st.warning("Esta restricción ya existe.")
                 else:
-                    st.session_state["solver"].add_constraint(lhs, OPERATOR_MAP[operator_choice], rhs)
-                    st.session_state["restrictions"].append(new_restriction)
-                    st.success("Restricción agregada exitosamente.")
-                    st.rerun()
+                    try:
+                        st.session_state["solver"].add_constraint(lhs, OPERATOR_MAP[operator_choice], rhs)
+                        st.session_state["restrictions"].append(new_restriction)
+                        st.success("Restricción agregada exitosamente.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al agregar la restricción: Variable {e}")
+                    
             else:
                 st.error("El lado izquierdo no puede estar vacío.")
+
 
 def solve_problem():
     """Resuelve el problema de programación lineal y muestra los resultados."""
@@ -107,9 +95,9 @@ def solve_problem():
             st.error("El problema no tiene solución óptima.")
         else:
             st.success("Problema resuelto exitosamente.")
-            st.latex(r"\text{Valor Óptimo:}\quad " + str(solver.problem.objective.value()))
+            st.latex(r"\text{Valor Óptimo:} \quad " + str(solver.problem.objective.value()))
             solution = solver.get_solution()
-            st.latex(r"\text{Solución:}\quad " + ",\quad ".join([f"{key} = {value}" for key, value in solution.items()]))
+            st.latex(r"\text{Solución:} \quad " + ",\quad ".join([f"{key} = {value}" for key, value in solution.items()]))
 
             try:
                 fig = solver.plot_feasible_region()
@@ -154,6 +142,7 @@ col1, col2 = st.columns([3, 1])
 with col1:
     handle_objective_function()
     display_restrictions()
+    add_restrictions()
     solve_problem()
 
 with col2:

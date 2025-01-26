@@ -3,6 +3,14 @@ import sympy as sp
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import streamlit as st
+
+# Mapeo de operadores
+OPERATOR_MAP = {
+    "≤": "<=",
+    "=": "==",
+    "≥": ">="
+}
 
 def str_to_lambda(equation, reverse=False):
     """
@@ -267,3 +275,15 @@ def plot_feasible_region_and_constraints(lambda_constraints, str_constraints, op
     return fig
 
 
+def configure_page():
+    """Configura el diseño general de la página."""
+    st.markdown(
+        """
+        <style>
+            .block-container {
+                max-width: 1000px;  /* Ajusta el ancho según lo desees */
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
