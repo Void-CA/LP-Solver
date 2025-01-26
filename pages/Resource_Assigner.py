@@ -2,16 +2,9 @@ import streamlit as st
 import pandas as pd
 from models import ResourceAssignmentSolver
 from st_aggrid import AgGrid, GridOptionsBuilder
+from utils import configure_page
 
-# Use CSS to modify the container size
-st.markdown(
-    """
-    <style>
-        .block-container {
-            max-width: 1000px;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+configure_page()
 
 variable_type = "Binaria"
 max_resources_per_task = 1
@@ -73,7 +66,14 @@ def app():
             if st.button("Procesar datos manuales"):
                 updated_matrix = pd.DataFrame(response["data"])
                 st.write("Datos ingresados:")
-                st.dataframe(updated_matrix)
+                cols = st.columns(2)
+                with cols[0]:
+                    st.dataframe(updated_matrix)
+                with cols[1]:
+                    solver = ResourceAssignmentSolver(updated_matrix)
+                    solver.solve()
+                    st.write("Resultado:")
+                    st.dataframe(solver.get_solution())
 
     elif input_option == "Cargar desde CSV":
 
@@ -113,8 +113,13 @@ def app():
             # Retrieve edited data
             if st.button("Procesar datos del CSV"):
                 edited_data = pd.DataFrame(response["data"])
-                st.write("Datos editados:")
-                st.dataframe(edited_data)
+                cols = st.columns(2)
+                with cols[0]:
+                    st.write("Datos originales:")
+                    st.dataframe(data)
+                with cols[1]:
+                    st.write("Datos editados:")
+                    st.dataframe(edited_data)
 
     # Option to save processed data
     if st.button("Descargar datos procesados"):

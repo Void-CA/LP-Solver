@@ -96,28 +96,39 @@ class LinearProgrammingSolver:
         return fig
 
 
+import pandas as pd
+from pulp import LpProblem, LpVariable, LpMinimize, lpSum
+
 class ResourceAssignmentSolver:
-    def __init__(self, cost_matrix, max_resources_per_task=1, max_tasks_per_resource=1, allow_unassigned_tasks=False, variable_type="Binary"):
-        if any(len(row) != len(cost_matrix[0]) for row in cost_matrix):
-            raise ValueError("cost_matrix debe ser una matriz rectangular.")
+    def __init__(self, df, max_resources_per_task=1, max_tasks_per_resource=1, allow_unassigned_tasks=False, variable_type="Binary"):
+        # Verificar que el DataFrame tenga la estructura correcta
+        if df.empty or "Recurso" not in df.columns:
+            raise ValueError("El DataFrame debe tener una columna 'Recurso' y las demás columnas para los trabajadores.")
         
-        self.cost_matrix = cost_matrix
+        self.df = df
         self.max_resources_per_task = max_resources_per_task
         self.max_tasks_per_resource = max_tasks_per_resource
         self.allow_unassigned_tasks = allow_unassigned_tasks
         self.variable_type = variable_type
 
+        # Definir la matriz de costos a partir del DataFrame
+        self.cost_matrix = df.drop(columns=["Recurso"]).values.tolist()
         self.problem = LpProblem("Resource_Assignment", LpMinimize)
-        self.num_tasks = len(cost_matrix[0])
-        self.num_resources = len(cost_matrix)
+        self.num_tasks = len(self.cost_matrix[0])
+        self.num_resources = len(self.cost_matrix)
         self.x = [[LpVariable(f"x_{i}_{j}", cat=self.variable_type) for j in range(self.num_tasks)] for i in range(self.num_resources)]
-    
+
     def add_resource(self, default_cost=1e6):
+        # Agregar un nuevo recurso al DataFrame
+        new_resource = ["Nuevo Recurso"] + [default_cost] * self.num_tasks
+        self.df.loc[self.num_resources] = new_resource
         self.cost_matrix.append([default_cost] * self.num_tasks)
         self.x.append([LpVariable(f"x_{self.num_resources}_{j}", cat=self.variable_type) for j in range(self.num_tasks)])
         self.num_resources += 1
     
     def add_task(self, default_cost=1e6):
+        # Agregar una nueva tarea al DataFrame
+        self.df["Nueva Tarea"] = [default_cost] * self.num_resources
         for row in self.cost_matrix:
             row.append(default_cost)
         for i in range(self.num_resources):
@@ -125,9 +136,11 @@ class ResourceAssignmentSolver:
         self.num_tasks += 1
     
     def set_objective(self):
+        # Establecer la función objetivo
         self.problem += lpSum(self.cost_matrix[i][j] * self.x[i][j] for i in range(self.num_resources) for j in range(self.num_tasks)), "Costo_Total"
     
     def add_constraints(self):
+        # Añadir las restricciones del modelo
         for j in range(self.num_tasks):
             self.problem += lpSum(self.x[i][j] for i in range(self.num_resources)) == self.max_resources_per_task, f"Tarea_{j}_asignada"
         for i in range(self.num_resources):
@@ -137,6 +150,7 @@ class ResourceAssignmentSolver:
                 self.problem += lpSum(self.x[i][j] for i in range(self.num_resources)) <= 1, f"Tarea_{j}_opcional"
 
     def solve(self):
+        # Resolver el problema
         self.set_objective()
         self.add_constraints()
         self.problem.solve()
@@ -145,6 +159,19 @@ class ResourceAssignmentSolver:
         return self.problem.status, self.problem.objective.value()
     
     def get_solution(self):
+        # Obtener la solución del problema
         return {(i, j): self.x[i][j].varValue for i in range(self.num_resources) for j in range(self.num_tasks) if self.x[i][j].varValue > 0}
+
+    def get_assignment(self):
+        # Devolver la asignación de recursos a tareas en un formato más legible
+        solution = self.get_solution()
+        assignments = {}
+        for (i, j), value in solution.items():
+            if value > 0:
+                worker = self.df.columns[j + 1]  # Tareas están en las columnas 1+ en el DataFrame
+                if worker not in assignments:
+                    assignments[worker] = []
+                assignments[worker].append(self.df.iloc[i]["Recurso"])
+        return assignments
 
  
